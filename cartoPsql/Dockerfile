@@ -34,7 +34,7 @@ RUN apt-get install -y  proj \
 		    	libgeos-c1v5 \ 
 		    	libgeos-dev \
 		    	ogr2ogr2-static-bin \
-			libxml2-dev
+			libxml2-dev \
 			liblwgeom-2.1.8 \
 			postgis \ 
 			postgresql-9.3-postgis-2.2 \
@@ -43,6 +43,11 @@ RUN apt-get install -y  proj \
 # Add users, being root isn't fun
 RUN useradd -ms /bin/bash postgres
 RUN echo "postgres   ALL=NOPASSWD: ALL" >> /etc/sudoers
+#RUN sudo service postgresql restart
+
+# Copy pg config file to proper dir
+COPY postgresql-9.3_main/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
+RUN service postgresql restart
 
 # add postgres users
 USER postgres
