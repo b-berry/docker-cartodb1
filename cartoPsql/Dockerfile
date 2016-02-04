@@ -40,8 +40,8 @@ RUN apt-get install -y  proj \
 			postgresql-9.3-postgis-2.2 \
 			postgresql-9.3-postgis-scripts
 
-# Add users, being root isn't fun
-RUN useradd -ms /bin/bash postgres
+# Add users if necessary, being root isn't fun
+RUN id -u postgres || useradd -ms /bin/bash postgres
 RUN echo "postgres   ALL=NOPASSWD: ALL" >> /etc/sudoers
 #RUN sudo service postgresql restart
 
