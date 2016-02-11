@@ -53,6 +53,11 @@ RUN echo "postgres   ALL=NOPASSWD: ALL" >> /etc/sudoers
 COPY postgresql-9.3_main/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
 RUN service postgresql restart
 
+# Setup postgres log
+ENV PSQL_LOG /var/log/postgres
+RUN mkdir -p $PSQL_LOG &&\
+    chown -R postgres:postgres $PSQL_LOG
+
 #    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
 USER postgres
 RUN  /etc/init.d/postgresql start &&\
@@ -78,7 +83,8 @@ RUN sudo mkdir -p $PSQL_CDB &&\
     cd ${PSQL_CDB} && sudo make all install
 
 ## Initialize template postgis db
-RUN createdb -T template0 -O postgres -U postgres -E UTF8 template_postgis &&\
+RUN postgres -D /usr/local/pgsql/data >$PSQL_LOG/psql.log 2>&1 & \
+    createdb -T template0 -O postgres -U postgres -E UTF8 template_postgis &&\
     createlang plpgsql -U postgres -d template_postgis &&\
     psql -U postgres template_postgis -c 'CREATE EXTENSION postgis;CREATE EXTENSION postgis_topology;' &&\
     sudo ldconfig &&\
