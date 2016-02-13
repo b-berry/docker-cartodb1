@@ -3,13 +3,17 @@ FROM ubuntu:12.04
 # Install core packages
 RUN apt-get update &&\
     apt-get install -y software-properties-common \
-	    python-software-properties \
+        python-software-properties \
         make
 
-# Add cartodb repo
-RUN add-apt-repository -y ppa:cartodb/postgresql-9.3
+RUN add-apt-repository -y ppa:cartodb/postgresql-9.3 &&\
+    add-apt-repository -y ppa:cartodb/pg-schema-trigger &&\
+    add-apt-repository -y ppa:cartodb/gis &&\ 
+    apt-get update
+
+# Add cartodb packages 
 RUN apt-get update && apt-get install -y git \ 
-		libpq5 \
+        libpq5 \
         libpq-dev \
         postgresql-client-9.3 \
         postgresql-client-common \
@@ -17,15 +21,11 @@ RUN apt-get update && apt-get install -y git \
         postgresql-contrib-9.3 \
         postgresql-server-dev-9.3 \
         postgresql-plpython-9.3 \
-		sudo \
+        sudo \
         vim
-
-RUN add-apt-repository -y ppa:cartodb/pg-schema-trigger && apt-get update
-RUN apt-get install -y postgresql-9.3-pg-schema-triggers
-
-# GIS dependencies
-RUN add-apt-repository -y ppa:cartodb/gis && apt-get update
-RUN apt-get install -y  proj \ 
+# Add postgres packages
+RUN apt-get install -y postgresql-9.3-pg-schema-triggers \
+        proj \ 
         proj-bin \
         proj-data \ 
         libproj-dev \
