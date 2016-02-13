@@ -6,13 +6,14 @@ RUN apt-get update &&\
         python-software-properties \
         make
 
+# Update APT sources
 RUN add-apt-repository -y ppa:cartodb/postgresql-9.3 &&\
     add-apt-repository -y ppa:cartodb/pg-schema-trigger &&\
     add-apt-repository -y ppa:cartodb/gis &&\ 
     apt-get update
 
 # Add cartodb packages 
-RUN apt-get update && apt-get install -y git \ 
+RUN apt-get install -y git \ 
         libpq5 \
         libpq-dev \
         postgresql-client-9.3 \
@@ -23,6 +24,7 @@ RUN apt-get update && apt-get install -y git \
         postgresql-plpython-9.3 \
         sudo \
         vim
+
 # Add postgres packages
 RUN apt-get install -y postgresql-9.3-pg-schema-triggers \
         proj \ 
@@ -60,6 +62,7 @@ RUN service postgresql restart
 #    chown -R postgres:postgres $PSQL_LOG
 
 #    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
+
 USER postgres
 RUN  /etc/init.d/postgresql start &&\
 #    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
