@@ -51,12 +51,13 @@ RUN echo "postgres   ALL=NOPASSWD: ALL" >> /etc/sudoers
 
 # Copy pg config file to proper dir
 COPY postgresql-9.3_main/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
+COPY postgresql-9.3_main/postgresql.conf /etc/postgresql/9.3/main/postgresql.conf
 RUN service postgresql restart
 
 # Setup postgres log
-ENV PSQL_LOG /var/log/postgres
-RUN mkdir -p $PSQL_LOG &&\
-    chown -R postgres:postgres $PSQL_LOG
+#ENV PSQL_LOG /var/log/postgres
+#RUN mkdir -p $PSQL_LOG &&\
+#    chown -R postgres:postgres $PSQL_LOG
 
 #    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
 USER postgres
@@ -67,7 +68,7 @@ RUN  /etc/init.d/postgresql start &&\
 #    createdb -O docker my_cartodb
 
 # And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
-RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
+#RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 
 # Expose the PostgreSQL port
 EXPOSE 5432
