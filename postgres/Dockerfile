@@ -3,17 +3,16 @@ FROM ubuntu:12.04
 # Set env var
 RUN DEBIAN_FRONTEND=noninteractive
 
-# Install core packages
-RUN apt-get update &&\
-    apt-get install -y software-properties-common \
-        python-software-properties \
-        make
-
 # Update APT sources
 RUN add-apt-repository -y ppa:cartodb/postgresql-9.3 &&\
     add-apt-repository -y ppa:cartodb/pg-schema-trigger &&\
     add-apt-repository -y ppa:cartodb/gis &&\ 
     apt-get update
+
+# Install core packages
+RUN apt-get install -y software-properties-common \
+        python-software-properties \
+        make
 
 # Add cartodb packages 
 RUN apt-get install -y git \ 
