@@ -3,16 +3,17 @@ FROM ubuntu:12.04
 # Set env var
 RUN DEBIAN_FRONTEND=noninteractive
 
+# Install core packages
+RUN apt-get update &&\ 
+    apt-get install -y software-properties-common \
+        python-software-properties \
+        make
+
 # Update APT sources
 RUN add-apt-repository -y ppa:cartodb/postgresql-9.3 &&\
     add-apt-repository -y ppa:cartodb/pg-schema-trigger &&\
     add-apt-repository -y ppa:cartodb/gis &&\ 
     apt-get update
-
-# Install core packages
-RUN apt-get install -y software-properties-common \
-        python-software-properties \
-        make
 
 # Add cartodb packages 
 RUN apt-get install -y git \ 
@@ -54,7 +55,7 @@ RUN echo "postgres   ALL=NOPASSWD: ALL" >> /etc/sudoers
 # Copy pg config file to proper dir
 COPY postgresql-9.3_main/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
 COPY postgresql-9.3_main/postgresql.conf /etc/postgresql/9.3/main/postgresql.conf
-RUN service postgresql start
+#RUN service postgresql start
 
 # Setup postgres log
 #ENV PSQL_LOG /var/log/postgres
@@ -88,8 +89,9 @@ RUN sudo mkdir -p $PSQL_CDB &&\
 
 ## Initialize template postgis db
 # postgres -D /usr/local/pgsql/data >$PSQL_LOG/psql.log 2>&1 & \
-RUN sudo createdb -T template0 -O postgres -U postgres -E UTF8 template_postgis &&\
-    sudo createlang plpgsql -U postgres -d template_postgis &&\
+RUN sudo service postgresql start &&\ 
+    sudo createdb -T template0 -O postgres -U postgres -E UTF8 template_postgis &&\
+    #sudo createlang plpgsql -U postgres -d template_postgis &&\
     psql -U postgres template_postgis -c 'CREATE EXTENSION postgis;CREATE EXTENSION postgis_topology;' &&\
     sudo ldconfig &&\
     sudo service postgresql restart
