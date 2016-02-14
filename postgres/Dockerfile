@@ -1,5 +1,8 @@
 FROM ubuntu:12.04 
 
+# Set env var
+RUN DEBIAN_FRONTEND=noninteractive
+
 # Install core packages
 RUN apt-get update &&\
     apt-get install -y software-properties-common \
@@ -18,7 +21,7 @@ RUN apt-get install -y git \
         libpq-dev \
         postgresql-client-9.3 \
         postgresql-client-common \
-		postgresql-9.3 \
+        postgresql-9.3 \
         postgresql-contrib-9.3 \
         postgresql-server-dev-9.3 \
         postgresql-plpython-9.3 \
@@ -49,12 +52,10 @@ RUN apt-get install -y postgresql-9.3-pg-schema-triggers \
 RUN id -u postgres || useradd -ms /bin/bash postgres
 RUN echo "postgres   ALL=NOPASSWD: ALL" >> /etc/sudoers
 
-#RUN sudo service postgresql restart
-
 # Copy pg config file to proper dir
 COPY postgresql-9.3_main/pg_hba.conf /etc/postgresql/9.3/main/pg_hba.conf
 COPY postgresql-9.3_main/postgresql.conf /etc/postgresql/9.3/main/postgresql.conf
-RUN service postgresql restart
+RUN service postgresql start
 
 # Setup postgres log
 #ENV PSQL_LOG /var/log/postgres
@@ -87,9 +88,9 @@ RUN sudo mkdir -p $PSQL_CDB &&\
     cd ${PSQL_CDB} && sudo make all install
 
 ## Initialize template postgis db
-RUN postgres -D /usr/local/pgsql/data >$PSQL_LOG/psql.log 2>&1 & \
-    createdb -T template0 -O postgres -U postgres -E UTF8 template_postgis &&\
-    createlang plpgsql -U postgres -d template_postgis &&\
+# postgres -D /usr/local/pgsql/data >$PSQL_LOG/psql.log 2>&1 & \
+RUN sudo createdb -T template0 -O postgres -U postgres -E UTF8 template_postgis &&\
+    sudo createlang plpgsql -U postgres -d template_postgis &&\
     psql -U postgres template_postgis -c 'CREATE EXTENSION postgis;CREATE EXTENSION postgis_topology;' &&\
     sudo ldconfig &&\
     sudo service postgresql restart
