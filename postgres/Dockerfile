@@ -7,25 +7,32 @@ RUN DEBIAN_FRONTEND=noninteractive
 RUN apt-get update &&\ 
     apt-get install -y software-properties-common \
         python-software-properties \
-        make
+        make \
+        sudo 
 
 # Update APT sources
-RUN add-apt-repository -y ppa:cartodb/postgresql-9.3 &&\
+RUN add-apt-repository -y ppa:cartodb/gis &&\ 
+    add-apt-repository -y ppa:cartodb/nodejs-010 &&\
+    add-apt-repository -y ppa:cartodb/postgresql-9.3 &&\
     add-apt-repository -y ppa:cartodb/pg-schema-trigger &&\
-    add-apt-repository -y ppa:cartodb/gis &&\ 
     apt-get update
 
 # Add cartodb packages 
-RUN apt-get install -y git \ 
+RUN apt-get install -y autoconf \
+        binutils-doc \ 
+        bison \ 
+        build-essential \
+        flex \
+        git \ 
         libpq5 \
         libpq-dev \
+        nodejs \
         postgresql-client-9.3 \
         postgresql-client-common \
         postgresql-9.3 \
         postgresql-contrib-9.3 \
         postgresql-server-dev-9.3 \
         postgresql-plpython-9.3 \
-        sudo \
         vim
 
 # Add postgres packages
@@ -80,12 +87,27 @@ EXPOSE 5432
 # Add VOLUMEs to allow backup of config, logs and databases
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
+# Set up environment variables
 ENV PSQL_HOME /home/postgres
 ENV PSQL_CDB $PSQL_HOME/cartodb-postgresql
-RUN sudo mkdir -p $PSQL_CDB &&\
-    sudo chown -R postgres $PSQL_CDB &&\
+ENV PSQL_SRC $PSQL_HOME/src
+ENV SQL_API $PSQL_SRC/CartoDB-SQL-API
+
+# Checkout && build cartodb-postgresql
+RUN sudo mkdir -p $PSQL_CDB && sudo chown -R postgres:postgres $PSQL_CDB &&\
     git clone https://github.com/CartoDB/cartodb-postgresql.git ${PSQL_CDB} &&\
     cd ${PSQL_CDB} && sudo make all install
+   
+ # Checkout && build cartodb-sql-api
+RUN sudo mkdir -p $PSQL_SRC && sudo chown -R postgres:postgres $PSQL_SRC &&\ 
+    cd ${PSQL_SRC} &&\
+    git clone git://github.com/CartoDB/CartoDB-SQL-API.git &&\
+    cd ${SQL_API} &&\
+    git checkout master &&\
+    npm install &&\
+    cp config/environments/development.js.example config/environments/development.js &&\
+    node app.js development &&\
+    cd ${PSQL_HOME}
 
 ## Initialize template postgis db
 # postgres -D /usr/local/pgsql/data >$PSQL_LOG/psql.log 2>&1 & \
