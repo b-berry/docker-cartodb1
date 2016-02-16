@@ -33,7 +33,8 @@ RUN apt-get install -y autoconf \
         postgresql-contrib-9.3 \
         postgresql-server-dev-9.3 \
         postgresql-plpython-9.3 \
-        vim
+        vim \
+        zip
 
 # Add postgres packages
 RUN apt-get install -y postgresql-9.3-pg-schema-triggers \
@@ -69,17 +70,10 @@ COPY postgresql-9.3_main/postgresql.conf /etc/postgresql/9.3/main/postgresql.con
 #RUN mkdir -p $PSQL_LOG &&\
 #    chown -R postgres:postgres $PSQL_LOG
 
-#    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-
 USER postgres
 RUN  /etc/init.d/postgresql start &&\
-#    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createuser publicuser --no-createrole --no-createdb --no-superuser -U postgres &&\
     createuser tileuser --no-createrole --no-createdb --no-superuser -U postgres
-#    createdb -O docker my_cartodb
-
-# And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
-#RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 
 # Expose the PostgreSQL port
 EXPOSE 5432
@@ -104,7 +98,7 @@ RUN sudo mkdir -p $PSQL_SRC && sudo chown -R postgres:postgres $PSQL_SRC &&\
     git clone git://github.com/CartoDB/CartoDB-SQL-API.git &&\
     cd ${SQL_API} &&\
     git checkout master &&\
-    npm install &&\
+    npm install --quiet &&\
     cp config/environments/development.js.example config/environments/development.js &&\
     node app.js development &&\
     cd ${PSQL_HOME}
