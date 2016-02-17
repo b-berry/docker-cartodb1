@@ -26,6 +26,7 @@ RUN apt-get install -y autoconf \
         git \ 
         libpq5 \
         libpq-dev \
+        libpango1.0-dev \
         nodejs \
         postgresql-client-9.3 \
         postgresql-client-common \
@@ -83,20 +84,20 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 # Set up environment variables
 ENV PSQL_HOME /home/postgres
-ENV PSQL_CDB $PSQL_HOME/cartodb-postgresql
 ENV PSQL_SRC $PSQL_HOME/src
+ENV PSQL_CDB $PSQL_SRC/cartodb-postgresql
 ENV SQL_API $PSQL_SRC/CartoDB-SQL-API
+ENV Maps_API $PSQL_SRC/Windshaft-cartodb
 
 # Checkout && build cartodb-postgresql
 RUN sudo mkdir -p $PSQL_CDB && sudo chown -R postgres:postgres $PSQL_CDB &&\
-    git clone https://github.com/CartoDB/cartodb-postgresql.git ${PSQL_CDB} &&\
-    cd ${PSQL_CDB} && sudo make all install
+    git clone https://github.com/CartoDB/cartodb-postgresql.git $PSQL_CDB &&\
+    cd $PSQL_CDB && sudo make all install
    
 # Checkout && build cartodb-sql-api
 RUN sudo mkdir -p $SQL_API && sudo chown -R postgres:postgres $PSQL_SRC &&\ 
-    cd ${PSQL_SRC} &&\
-    git clone git://github.com/CartoDB/CartoDB-SQL-API.git &&\ 
-    cd ${SQL_API} &&\
+    git clone git://github.com/CartoDB/CartoDB-SQL-API.git $SQL_API &&\ 
+    cd $SQL_API &&\
     git checkout master &&\
     npm install
 
@@ -106,6 +107,20 @@ COPY init/cartodb-sql.conf /etc/init/
 RUN cd ${SQL_API} &&\
     cp config/environments/development.js.example config/environments/development.js &&\
     sudo service cartodb-sql start
+
+# Checkout && build MapsAPI
+RUN sudo mkdir -p $Maps_API && sudo chown -R postgres:postgres $Maps_API &&\
+    git clone git://github.com/CartoDB/Windshaft-cartodb.git $Maps_API &&\
+    cd $Maps_API &&\
+    git checkout master &&\
+    npm install
+
+# Copy NodeJS upstart
+COPY init/cartodb-maps.conf /etc/init/
+
+RUN cd $Maps_API &&\
+    cp config/environments/development.js.example config/environments/development.js &&\
+    sudo service cartodb-maps start
 
 ## Initialize template postgis db
 RUN sudo service postgresql start &&\ 
