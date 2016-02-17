@@ -92,19 +92,22 @@ RUN sudo mkdir -p $PSQL_CDB && sudo chown -R postgres:postgres $PSQL_CDB &&\
     git clone https://github.com/CartoDB/cartodb-postgresql.git ${PSQL_CDB} &&\
     cd ${PSQL_CDB} && sudo make all install
    
- # Checkout && build cartodb-sql-api
-RUN sudo mkdir -p $PSQL_SRC && sudo chown -R postgres:postgres $PSQL_SRC &&\ 
+# Checkout && build cartodb-sql-api
+RUN sudo mkdir -p $SQL_API && sudo chown -R postgres:postgres $PSQL_SRC &&\ 
     cd ${PSQL_SRC} &&\
-    git clone git://github.com/CartoDB/CartoDB-SQL-API.git &&\
+    git clone git://github.com/CartoDB/CartoDB-SQL-API.git &&\ 
     cd ${SQL_API} &&\
     git checkout master &&\
-    npm install --quiet &&\
+    npm install
+
+# Copy NodeJS upstart
+COPY init/cartodb-sql.conf /etc/init/
+
+RUN cd ${SQL_API} &&\
     cp config/environments/development.js.example config/environments/development.js &&\
-    node app.js development &&\
-    cd ${PSQL_HOME}
+    sudo service cartodb-sql start
 
 ## Initialize template postgis db
-# postgres -D /usr/local/pgsql/data >$PSQL_LOG/psql.log 2>&1 & \
 RUN sudo service postgresql start &&\ 
     sudo createdb -T template0 -O postgres -U postgres -E UTF8 template_postgis &&\
     #sudo createlang plpgsql -U postgres -d template_postgis &&\
