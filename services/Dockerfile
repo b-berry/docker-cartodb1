@@ -15,11 +15,19 @@ RUN add-apt-repository -y ppa:cartodb/redis &&\
 
 # Add packages
 RUN apt-get update &&\ 
-    apt-get install -y build-essential \
+    apt-get install -y autoconf \
+        binutils-doc \
+        bison \
+        build-essential \
+        flex
         git \
         imagemagick \
+        libicu-dev \
+        libpq5 \
+        libpq-dev \
         libreadline6-dev \ 
         make \
+        nodejs \
         openssl \
         python-all-dev \
         redis-server \
@@ -58,24 +66,28 @@ RUN cd $PROJ_SRV/ruby-install-0.5.0/ &&\
     cd ../
 
 # Install Editor
-RUN git clone --recursive https://github.com/CartoDB/cartodb.git
-
-RUN cd cartodb &&\
+RUN git clone --recursive https://github.com/CartoDB/cartodb.git &&\
+    cd cartodb &&\
     sudo wget -O /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py &&\
     sudo python /tmp/get-pip.py &&\
-    RAILS_ENV=development bundle install &&\
+    $RUBY_DIR/gem install pg -v '0.15.0' &&\
+    $RUBY_DIR/gem install charlock_holmes -v '0.7.2' &&\ 
+    RAILS_ENV=development $RUBY_DIR/bundle install
+
+RUN cd cartodb &&\
+    #npm config set registry http://registry.npmjs.org/ &&\
     npm install &&\
     sudo pip install --no-use-wheel -r python_requirements.txt &&\ 
     export PATH=$PATH:$PWD/node_modules/grunt-cli/bini &&\
-    bundle install &&\
-    bundle exec grunt --environment development &&\
+    $RUBY_DIR/bundle install &&\
+    $RUBY_DIR/bundle exec grunt --environment development &&\
     cp config/app_config.yml.sample config/app_config.yml &&\
     cp config/database.yml.sample config/database.yml 
 
 RUN redis-server & &&\
-    RAILS_ENV=development bundle exec rails server
+    RAILS_ENV=development $RUBY_DIR/bundle exec rails server
 
-ENTRYPOINT RAILS_ENV=development bundle exec ./script/resque
+ENTRYPOINT RAILS_ENV=development $RUBY_DIR/bundle exec ./script/resque
 
 
 
