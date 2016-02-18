@@ -19,7 +19,7 @@ RUN apt-get update &&\
         binutils-doc \
         bison \
         build-essential \
-        flex
+        flex \
         git \
         imagemagick \
         libicu-dev \
@@ -88,8 +88,3 @@ RUN redis-server & &&\
     RAILS_ENV=development $RUBY_DIR/bundle exec rails server
 
 ENTRYPOINT RAILS_ENV=development $RUBY_DIR/bundle exec ./script/resque
-
-
-
-
-
